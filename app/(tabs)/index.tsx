@@ -1,6 +1,25 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
+  const [waterList, setWaterList] = useState([]);
+
+  const fetchWater = async () => {
+    try {
+      const response = await fetch("http://192.168.0.138:8080/water");
+      const data = await response.json();
+      setWaterList(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const addWater = async () => {
     try {
       await fetch("http://192.168.0.138:8080/water", {
@@ -14,24 +33,33 @@ export default function HomeScreen() {
         }),
       });
 
-      alert("Water added 💧");
+      fetchWater();
     } catch (error) {
       console.log(error);
-      alert("Error connecting to backend");
     }
   };
 
+  useEffect(() => {
+    fetchWater();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>💧</Text>
-      <Text style={styles.title}>Water Tracker</Text>
-      <Text style={styles.subtitle}>
-        Track your daily water intake and stay hydrated.
-      </Text>
+      <Text style={styles.title}>💧 Water Tracker</Text>
 
       <TouchableOpacity style={styles.button} onPress={addWater}>
         <Text style={styles.buttonText}>Add 250ml</Text>
       </TouchableOpacity>
+
+      <FlatList
+        data={waterList}
+        keyExtractor={(item: any) => item.id.toString()}
+        renderItem={({ item }: any) => (
+          <Text style={styles.item}>
+            {item.amount} ml - {item.date}
+          </Text>
+        )}
+      />
     </View>
   );
 }
@@ -39,37 +67,30 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
     backgroundColor: "#EAF7FF",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  emoji: {
-    fontSize: 72,
-    marginBottom: 16,
   },
   title: {
-    fontSize: 34,
+    fontSize: 28,
     fontWeight: "700",
-    color: "#1C4E80",
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#4A6FA5",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 28,
+    marginBottom: 20,
   },
   button: {
     backgroundColor: "#1C4E80",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 16,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   buttonText: {
     color: "white",
     fontSize: 18,
-    fontWeight: "700",
+    textAlign: "center",
+  },
+  item: {
+    fontSize: 16,
+    padding: 10,
+    backgroundColor: "white",
+    marginBottom: 8,
+    borderRadius: 8,
   },
 });
