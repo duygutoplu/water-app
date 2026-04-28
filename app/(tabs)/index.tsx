@@ -6,15 +6,27 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import PixelMascot from "../../components/PixelMascot";
 
 export default function HomeScreen() {
   const [waterList, setWaterList] = useState([]);
+  const [progress, setProgress] = useState(0);
 
   const fetchWater = async () => {
     try {
       const response = await fetch("http://192.168.0.138:8080/water");
       const data = await response.json();
       setWaterList(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchProgress = async () => {
+    try {
+      const response = await fetch("http://192.168.0.138:8080/water/progress");
+      const data = await response.json();
+      setProgress(data);
     } catch (error) {
       console.log(error);
     }
@@ -34,6 +46,7 @@ export default function HomeScreen() {
       });
 
       fetchWater();
+      fetchProgress();
     } catch (error) {
       console.log(error);
     }
@@ -41,11 +54,14 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchWater();
+    fetchProgress();
   }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>💧 Water Tracker</Text>
+
+      <PixelMascot progress={progress} />
 
       <TouchableOpacity style={styles.button} onPress={addWater}>
         <Text style={styles.buttonText}>Add 250ml</Text>
@@ -73,7 +89,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   button: {
     backgroundColor: "#1C4E80",
