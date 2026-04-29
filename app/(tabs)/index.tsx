@@ -8,25 +8,34 @@ import {
 } from "react-native";
 import PixelMascot from "../../components/PixelMascot";
 
+type WaterItem = {
+  id: number;
+  amount: number;
+  date: string;
+};
+
+const API_URL = "http://192.168.0.138:8080";
+const DAILY_GOAL = 2000;
+
 export default function HomeScreen() {
-  const [waterList, setWaterList] = useState([]);
+  const [waterList, setWaterList] = useState<WaterItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [progress, setProgress] = useState(0);
 
-  const fetchWater = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch("http://192.168.0.138:8080/water");
-      const data = await response.json();
-      setWaterList(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+      const waterResponse = await fetch(`${API_URL}/water`);
+      const waterData = await waterResponse.json();
 
-  const fetchProgress = async () => {
-    try {
-      const response = await fetch("http://192.168.0.138:8080/water/progress");
-      const data = await response.json();
-      setProgress(data);
+      const totalResponse = await fetch(`${API_URL}/water/total`);
+      const totalData = await totalResponse.json();
+
+      const progressResponse = await fetch(`${API_URL}/water/progress`);
+      const progressData = await progressResponse.json();
+
+      setWaterList(waterData);
+      setTotal(totalData);
+      setProgress(progressData);
     } catch (error) {
       console.log(error);
     }
@@ -34,47 +43,87 @@ export default function HomeScreen() {
 
   const addWater = async () => {
     try {
-      await fetch("http://192.168.0.138:8080/water", {
+      await fetch(`${API_URL}/water`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           amount: 250,
-          date: "2026-04-28",
+          date: "2026-04-29",
         }),
       });
 
-      fetchWater();
-      fetchProgress();
+      fetchData();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const resetDay = async () => {
+    try {
+      await fetch(`${API_URL}/water`, {
+        method: "DELETE",
+      });
+
+      fetchData();
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    fetchWater();
-    fetchProgress();
+    fetchData();
   }, []);
+
+  const remaining = Math.max(DAILY_GOAL - total, 0);
+  const progressWidth = Math.min(progress, 100);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>💧 Water Tracker</Text>
+      <Text style={styles.header}>Pixel Water Quest</Text>
+      <Text style={styles.subtitle}>Help Drippy stay hydrated 💧</Text>
 
       <PixelMascot progress={progress} />
 
-      <TouchableOpacity style={styles.button} onPress={addWater}>
-        <Text style={styles.buttonText}>Add 250ml</Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Today’s Progress</Text>
+
+        <Text style={styles.bigText}>
+          {total} ml / {DAILY_GOAL} ml
+        </Text>
+
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progressWidth}%` }]} />
+        </View>
+
+        <Text style={styles.remainingText}>
+          {remaining === 0 ? "Goal completed 👑" : `${remaining} ml left`}
+        </Text>
+      </View>
+
+      <TouchableOpacity style={styles.addButton} onPress={addWater}>
+        <Text style={styles.buttonText}>+ Add 250ml</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.resetButton} onPress={resetDay}>
+        <Text style={styles.resetButtonText}>Reset Day</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.historyTitle}>Today’s Records</Text>
 
       <FlatList
         data={waterList}
-        keyExtractor={(item: any) => item.id.toString()}
-        renderItem={({ item }: any) => (
-          <Text style={styles.item}>
-            {item.amount} ml - {item.date}
-          </Text>
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.recordItem}>
+            <Text style={styles.recordAmount}>{item.amount} ml</Text>
+            <Text style={styles.recordDate}>{item.date}</Text>
+          </View>
         )}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No water added yet.</Text>
+        }
       />
     </View>
   );
@@ -83,30 +132,110 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#EAF7FF",
+    padding: 22,
   },
-  title: {
+  header: {
+    fontSize: 30,
+    fontWeight: "900",
+    color: "#1C4E80",
+    marginTop: 20,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 15,
+    color: "#4A6FA5",
+    textAlign: "center",
+    marginBottom: 18,
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 18,
+    borderWidth: 3,
+    borderColor: "#BDEBFF",
+  },
+  cardTitle: {
+    fontSize: 16,
+    color: "#4A6FA5",
+    marginBottom: 8,
+  },
+  bigText: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: "900",
+    color: "#1C4E80",
+    marginBottom: 14,
+  },
+  progressBar: {
+    height: 18,
+    backgroundColor: "#D6F2FF",
+    borderRadius: 999,
+    overflow: "hidden",
     marginBottom: 10,
   },
-  button: {
+  progressFill: {
+    height: "100%",
     backgroundColor: "#1C4E80",
+    borderRadius: 999,
+  },
+  remainingText: {
+    fontSize: 15,
+    color: "#355C7D",
+    fontWeight: "600",
+  },
+  addButton: {
+    backgroundColor: "#1C4E80",
+    padding: 16,
+    borderRadius: 18,
+    marginBottom: 10,
+  },
+  resetButton: {
+    backgroundColor: "#FFFFFF",
     padding: 14,
-    borderRadius: 12,
-    marginBottom: 20,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: "#1C4E80",
+    marginBottom: 18,
   },
   buttonText: {
     color: "white",
     fontSize: 18,
+    fontWeight: "800",
     textAlign: "center",
   },
-  item: {
+  resetButtonText: {
+    color: "#1C4E80",
     fontSize: 16,
-    padding: 10,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  historyTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1C4E80",
+    marginBottom: 10,
+  },
+  recordItem: {
     backgroundColor: "white",
+    padding: 14,
+    borderRadius: 14,
     marginBottom: 8,
-    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  recordAmount: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1C4E80",
+  },
+  recordDate: {
+    fontSize: 14,
+    color: "#4A6FA5",
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#4A6FA5",
+    marginTop: 20,
   },
 });
