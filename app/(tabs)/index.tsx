@@ -15,12 +15,12 @@ type WaterItem = {
 };
 
 const API_URL = "http://192.168.0.138:8080";
-const DAILY_GOAL = 2000;
 
 export default function HomeScreen() {
   const [waterList, setWaterList] = useState<WaterItem[]>([]);
   const [total, setTotal] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [dailyGoal, setDailyGoal] = useState(2000);
 
   const fetchData = async () => {
     try {
@@ -33,9 +33,13 @@ export default function HomeScreen() {
       const progressResponse = await fetch(`${API_URL}/water/progress`);
       const progressData = await progressResponse.json();
 
+      const goalResponse = await fetch(`${API_URL}/goal`);
+      const goalData = await goalResponse.json();
+
       setWaterList(waterData);
       setTotal(totalData);
       setProgress(progressData);
+      setDailyGoal(goalData);
     } catch (error) {
       console.log(error);
     }
@@ -76,7 +80,7 @@ export default function HomeScreen() {
     fetchData();
   }, []);
 
-  const remaining = Math.max(DAILY_GOAL - total, 0);
+  const remaining = Math.max(dailyGoal - total, 0);
   const progressWidth = Math.min(progress, 100);
 
   return (
@@ -90,7 +94,7 @@ export default function HomeScreen() {
         <Text style={styles.cardTitle}>Today’s Progress</Text>
 
         <Text style={styles.bigText}>
-          {total} ml / {DAILY_GOAL} ml
+          {total} ml / {dailyGoal} ml
         </Text>
 
         <View style={styles.progressBar}>
