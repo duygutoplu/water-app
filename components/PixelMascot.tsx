@@ -24,6 +24,7 @@ export default function PixelMascot({ progress }: PixelMascotProps) {
 
   return (
     <View style={styles.card}>
+      <Text style={styles.zone}>Hydration Hero Zone</Text>
       <Text style={styles.drop}>💧</Text>
       <Text style={styles.face}>{face}</Text>
       <Text style={styles.name}>Drippy</Text>
@@ -34,15 +35,21 @@ export default function PixelMascot({ progress }: PixelMascotProps) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 180,
-    height: 180,
+    width: "100%",
     backgroundColor: "#BDEBFF",
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: "#1C4E80",
-    borderRadius: 18,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+    paddingVertical: 12,
+  },
+  zone: {
+    color: "#1C4E80",
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 4,
   },
   drop: {
     fontSize: 42,
